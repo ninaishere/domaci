@@ -24,7 +24,7 @@ describe("Register test", () => {
 
   // ︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿
   // 1.
-  it("register with valid credentials", () => {
+  it.only("register with valid credentials", () => {
     cy.intercept({
       method: "POST",
       url: "https://gallery-api.vivifyideas.com/api/auth/register",
@@ -276,7 +276,7 @@ describe("Register test", () => {
 
   // ︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿
   // 9.
-  it.only("invalid email", () => {
+  it("invalid email", () => {
     cy.intercept({
       method: "POST",
       url: "https://gallery-api.vivifyideas.com/api/auth/register",
