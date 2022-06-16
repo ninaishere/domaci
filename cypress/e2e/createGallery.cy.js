@@ -1,6 +1,5 @@
 /// <reference types="Cypress" />
-// import { eq } from "cypress/types/lodash";
-// import { isSymbol } from "cypress/types/lodash";
+
 import { createGallery } from "../page_objects/createGallery";
 const faker = require("faker");
 
@@ -242,10 +241,9 @@ describe("Create gallery test", () => {
         cy.url().should("include", galleryId);
         // expect(interception.response.comments.body).to.eql(galleryData.comment);
 
-        // cy.get(createGallery.addedComment).should(
-        //   "have.text",
-        //   galleryData.comment
-        // ); ----> ne radi, getuje objekat
+        cy.get(".list-group-item > p")
+          .first()
+          .should("have.text", galleryData.comment);
       });
     });
   });
@@ -282,10 +280,7 @@ describe("Create gallery test", () => {
       cy.wait("@longComm").then((interception) => {
         expect(interception.response.statusCode).to.eql(422);
         cy.url().should("include", galleryId);
-        // cy.get(createGallery.commentInput).should(
-        //   "have.text",
-        //   galleryData.comment1001
-        // );
+        cy.get("textarea").should("not.have.text", galleryData.comment);
 
         createGallery.errorAlert.should("be.visible");
         createGallery.errorAlert.should(
@@ -303,7 +298,7 @@ describe("Create gallery test", () => {
 
   // ︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿
   // 9.
-  it.only("edit gallery", () => {
+  it("edit gallery", () => {
     cy.intercept({
       method: "POST",
       url: "https://gallery-api.vivifyideas.com/api/galleries",
@@ -339,39 +334,36 @@ describe("Create gallery test", () => {
 
   // ︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿︿
   // 10.
-  // ne radi zbog pop-up alerta
+  it("delete gallery after creating", () => {
+    cy.intercept({
+      method: "POST",
+      url: "https://gallery-api.vivifyideas.com/api/galleries",
+    }).as("create");
 
-  // it("delete gallery after creating", () => {
-  //   cy.intercept({
-  //     method: "POST",
-  //     url: "https://gallery-api.vivifyideas.com/api/galleries",
-  //   }).as("create");
+    createGallery.createGallery(
+      galleryData.title,
+      galleryData.description,
+      galleryData.phoneImage
+    );
 
-  //   createGallery.createGallery(
-  //     galleryData.title,
-  //     galleryData.description,
-  //     galleryData.phoneImage
-  //   );
+    cy.wait("@create").then((interception) => {
+      galleryId = interception.response.body.id;
 
-  //   cy.wait("@create").then((interception) => {
-  //     galleryId = interception.response.body.id;
+      expect(interception.response.statusCode).to.eql(201);
 
-  //     expect(interception.response.statusCode).to.eql(201);
+      cy.visit("/galleries/" + galleryId);
+      cy.url().should("not.include", "/create");
 
-  //     cy.visit("/galleries/" + galleryId);
-  //     cy.url().should("not.include", "/create");
+      cy.intercept({
+        method: "DELETE",
+        url: `https://gallery-api.vivifyideas.com/api/galleries/${galleryId}`,
+      }).as("delete");
 
-  //     cy.intercept({
-  //       method: "DELETE",
-  //       url: `https://gallery-api.vivifyideas.com/api/galleries/709${galleryId}`,
-  //     }).as("delete");
+      createGallery.deleteGalleryBtn.click();
 
-  //     createGallery.deleteGalleryBtn.click();
-
-  //     cy.wait("@delete").then((intercept) => {
-  //       cy.visit("/galleries/" + galleryId);
-  //       expect(intercept.response.statusCode).to.eql(200);
-  //     });
-  //   });
-  // });
+      cy.wait("@delete").then((intercept) => {
+        expect(intercept.response.statusCode).to.eql(200);
+      });
+    });
+  });
 });
